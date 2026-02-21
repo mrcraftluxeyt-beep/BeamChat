@@ -1,0 +1,2745 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeamChat · Полноценный мессенджер</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: #0a0c14;
+            color: white;
+            overflow: hidden;
+        }
+        .app {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+        /* Боковое меню */
+        .sidebar {
+            width: 300px;
+            background: #121b30;
+            border-right: 1px solid #253153;
+            display: flex;
+            flex-direction: column;
+        }
+        .profile-header {
+            padding: 20px;
+            border-bottom: 1px solid #253153;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .avatar {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(145deg, #2b4b9e, #1f3a7a);
+            border-radius: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .user-info h3 {
+            font-size: 1.1rem;
+            color: white;
+        }
+        .user-info p {
+            font-size: 0.8rem;
+            color: #8a9fd1;
+        }
+        .vip-badge {
+            background: gold;
+            color: #0a0c14;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 25px;
+            color: #a7b9f0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #1f2b4a;
+            color: white;
+            border-left: 3px solid #4f7ae0;
+        }
+        .badge {
+            background: #bf4b4b;
+            color: white;
+            border-radius: 30px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            margin-left: auto;
+        }
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .content-header {
+            padding: 20px 30px;
+            background: #121b30;
+            border-bottom: 1px solid #253153;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .content-header h2 {
+            font-size: 1.8rem;
+            color: white;
+        }
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 30px;
+        }
+        /* Кнопки */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .btn-primary {
+            background: #2b4b9e;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3d62c0;
+        }
+        .btn-secondary {
+            background: #2f3d66;
+            color: white;
+        }
+        .btn-success {
+            background: #2e7d32;
+            color: white;
+        }
+        .btn-danger {
+            background: #8b2e2e;
+            color: white;
+        }
+        /* Списки */
+        .chats-list, .contacts-list, .channels-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-item, .contact-item, .channel-item {
+            background: #1a2440;
+            border-radius: 28px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            border: 1px solid #2f3d66;
+            transition: 0.2s;
+        }
+        .chat-item:hover, .contact-item:hover, .channel-item:hover {
+            background: #223052;
+            border-color: #4f7ae0;
+        }
+        .chat-avatar, .contact-avatar, .channel-avatar {
+            width: 56px;
+            height: 56px;
+            background: #2b3e7a;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        .chat-info, .contact-info, .channel-info {
+            flex: 1;
+        }
+        .chat-name, .contact-name, .channel-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+        }
+        .chat-last, .contact-status, .channel-subscribers {
+            color: #8a9fd1;
+            font-size: 0.9rem;
+        }
+        .unread {
+            background: #4f7ae0;
+            border-radius: 30px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            color: white;
+        }
+        /* Модальные окна */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1a2440;
+            border-radius: 48px;
+            padding: 40px;
+            min-width: 450px;
+            border: 2px solid #4f7ae0;
+        }
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+        }
+        .modal-input {
+            width: 100%;
+            background: #1f294a;
+            border: 1px solid #314a7a;
+            border-radius: 40px;
+            padding: 15px 20px;
+            color: white;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .modal-input:focus {
+            border-color: #5f8aff;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        /* Сообщения */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+        .message.outgoing {
+            align-self: flex-end;
+        }
+        .message-bubble {
+            padding: 12px 18px;
+            border-radius: 24px;
+            background: #262f50;
+            color: white;
+        }
+        .message.outgoing .message-bubble {
+            background: #2b4b9e;
+        }
+        .message-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: #8a9fd1;
+        }
+        .reaction {
+            cursor: pointer;
+            padding: 2px 6px;
+            background: #1f294a;
+            border-radius: 20px;
+            color: white;
+        }
+        .message-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #121b30;
+        }
+        .message-input {
+            flex: 1;
+            background: #1f294a;
+            border: 1px solid #314a7a;
+            border-radius: 40px;
+            padding: 15px 20px;
+            color: white;
+            outline: none;
+        }
+        /* Подарки */
+        .gifts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .gift-card {
+            background: #1f2a48;
+            border-radius: 24px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #3e5a9c;
+            color: white;
+        }
+        .gift-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        /* Настройки */
+        .settings-section {
+            background: #1a2440;
+            border-radius: 32px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #2a3a60;
+            color: white;
+        }
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+        .twofa-enabled {
+            color: #4cd964;
+            font-weight: 600;
+        }
+        .stat-value {
+            color: #ffd966;
+            font-weight: 600;
+        }
+        /* Поиск */
+        .search-input {
+            width: 100%;
+            background: #1f294a;
+            border: 1px solid #314a7a;
+            border-radius: 40px;
+            padding: 12px 20px;
+            color: white;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        .empty-state {
+            text-align: center;
+            color: #8a9fd1;
+            padding: 60px 20px;
+            background: #1a2440;
+            border-radius: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <!-- Боковое меню -->
+        <div class="sidebar" id="sidebar">
+            <div class="profile-header" id="profileBtn">
+                <div class="avatar" id="avatar">⚡</div>
+                <div class="user-info">
+                    <h3 id="displayName">Гость</h3>
+                    <p id="displayEmail">не авторизован</p>
+                    <span class="vip-badge hidden" id="vipBadge">VIP</span>
+                </div>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-view="chats">
+                    <span>💬</span> Чаты
+                    <span class="badge" id="chatsBadge">0</span>
+                </div>
+                <div class="nav-item" data-view="contacts">
+                    <span>👥</span> Контакты
+                </div>
+                <div class="nav-item" data-view="channels">
+                    <span>📢</span> Каналы
+                </div>
+                <div class="nav-item" data-view="gifts">
+                    <span>🎁</span> Подарки
+                </div>
+                <div class="nav-item" data-view="vip">
+                    <span>👑</span> VIP подписка
+                </div>
+                <div class="nav-item" data-view="settings">
+                    <span>⚙️</span> Настройки
+                </div>
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="main-content" id="mainContent">
+            <!-- Динамически заполняется -->
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации/входа -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-title" id="authTitle">Регистрация</div>
+            <input type="text" class="modal-input" id="regUsername" placeholder="Имя пользователя">
+            <input type="email" class="modal-input" id="regEmail" placeholder="Электронная почта">
+            <input type="password" class="modal-input" id="regPassword" placeholder="Пароль">
+            <input type="password" class="modal-input" id="regConfirm" placeholder="Подтверждение пароля">
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="registerBtn" style="flex:1;">Зарегистрироваться</button>
+                <button class="btn btn-secondary" id="switchToLoginBtn">Войти</button>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" id="guestBtn">Войти как гость</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания чата -->
+    <div class="modal hidden" id="createChatModal">
+        <div class="modal-content">
+            <div class="modal-title">Создать чат</div>
+            <select class="modal-input" id="chatType">
+                <option value="private">Личный чат</option>
+                <option value="group">Групповой чат</option>
+            </select>
+            <input type="text" class="modal-input" id="chatName" placeholder="Название чата">
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="createChatConfirm">Создать</button>
+                <button class="btn btn-secondary" id="closeCreateChat">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания канала -->
+    <div class="modal hidden" id="createChannelModal">
+        <div class="modal-content">
+            <div class="modal-title">Создать канал</div>
+            <input type="text" class="modal-input" id="channelName" placeholder="Название канала">
+            <textarea class="modal-input" id="channelDesc" placeholder="Описание канала" rows="3"></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="createChannelConfirm">Создать</button>
+                <button class="btn btn-secondary" id="closeCreateChannel">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подарков -->
+    <div class="modal hidden" id="giftModal">
+        <div class="modal-content">
+            <div class="modal-title">Выберите подарок</div>
+            <div class="gifts-grid" id="giftsGrid"></div>
+            <button class="btn btn-secondary" id="closeGiftModal">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== ДАННЫЕ ====================
+        const BeamChat = {
+            currentUser: null,
+            state: {
+                currentView: 'chats',
+                activeChat: null,
+                activeChannel: null
+            },
+            db: {
+                users: [],
+                chats: [],
+                channels: [],
+                contacts: [],
+                messages: {},
+                gifts: [
+                    { id: 1, name: '💎 Алмаз', price: 50, icon: '💎' },
+                    { id: 2, name: '🌹 Роза', price: 10, icon: '🌹' },
+                    { id: 3, name: '🚀 Ракета', price: 100, icon: '🚀' },
+                    { id: 4, name: '👑 Корона VIP', price: 200, icon: '👑', vipOnly: true },
+                    { id: 5, name: '🎂 Торт', price: 75, icon: '🎂' },
+                    { id: 6, name: '🐻 Мишка', price: 30, icon: '🐻' }
+                ]
+            }
+        };
+
+        // Добавляем начальные данные
+        BeamChat.db.chats = [
+            { id: 1, name: 'Анна Светлова', type: 'private', avatar: 'А', lastMsg: 'Привет!', time: '10:30', unread: 2 },
+            { id: 2, name: 'Команда Beam', type: 'group', avatar: '👥', lastMsg: 'Встреча в 15:00', time: 'Вчера', unread: 0 },
+            { id: 3, name: 'Новости Beam', type: 'channel', avatar: '📢', lastMsg: 'Релиз 2.0', time: '12:45', unread: 5 }
+        ];
+
+        BeamChat.db.channels = [
+            { id: 101, name: 'Beam Official', avatar: '📡', subscribers: 1250, isSubscribed: true },
+            { id: 102, name: 'Игровой мир', avatar: '🎮', subscribers: 540, isSubscribed: false }
+        ];
+
+        BeamChat.db.contacts = [
+            { id: 1, name: 'Анна Светлова', status: 'online', avatar: 'А', subscribers: 120 },
+            { id: 2, name: 'Дмитрий Волков', status: 'offline', avatar: 'Д', subscribers: 45 },
+            { id: 3, name: 'Екатерина Луч', status: 'online', avatar: 'Е', subscribers: 230 }
+        ];
+
+        BeamChat.db.messages = {
+            1: [
+                { id: 1, text: 'Привет! Как дела?', time: '10:30', outgoing: false, reactions: [] },
+                { id: 2, text: 'Отлично! Готов к работе', time: '10:32', outgoing: true, reactions: [] }
+            ],
+            2: [
+                { id: 1, text: 'Всем привет в группе', time: '09:15', outgoing: false, reactions: ['👍'] }
+            ],
+            3: [
+                { id: 1, text: 'Вышел новый релиз', time: '12:45', outgoing: false, reactions: ['🔥', '👍'] }
+            ]
+        };
+
+        // ==================== UI ЭЛЕМЕНТЫ ====================
+        const mainContent = document.getElementById('mainContent');
+        const authModal = document.getElementById('authModal');
+        const createChatModal = document.getElementById('createChatModal');
+        const createChannelModal = document.getElementById('createChannelModal');
+        const giftModal = document.getElementById('giftModal');
+        const displayName = document.getElementById('displayName');
+        const displayEmail = document.getElementById('displayEmail');
+        const avatar = document.getElementById('avatar');
+        const vipBadge = document.getElementById('vipBadge');
+        const chatsBadge = document.getElementById('chatsBadge');
+
+        // ==================== ФУНКЦИИ ====================
+        function updateUI() {
+            if (BeamChat.currentUser) {
+                displayName.textContent = BeamChat.currentUser.username;
+                displayEmail.textContent = BeamChat.currentUser.email || 'нет почты';
+                avatar.textContent = BeamChat.currentUser.username.charAt(0).toUpperCase();
+                if (BeamChat.currentUser.isVip) {
+                    vipBadge.classList.remove('hidden');
+                } else {
+                    vipBadge.classList.add('hidden');
+                }
+            } else {
+                displayName.textContent = 'Гость';
+                displayEmail.textContent = 'не авторизован';
+                avatar.textContent = '⚡';
+                vipBadge.classList.add('hidden');
+            }
+            
+            const unreadCount = BeamChat.db.chats.reduce((sum, chat) => sum + (chat.unread || 0), 0);
+            chatsBadge.textContent = unreadCount || '0';
+        }
+
+        function showView(view) {
+            BeamChat.state.currentView = view;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.view === view) item.classList.add('active');
+            });
+            renderMainContent();
+        }
+
+        function renderMainContent() {
+            const view = BeamChat.state.currentView;
+            mainContent.innerHTML = '';
+
+            switch(view) {
+                case 'chats': renderChats(); break;
+                case 'contacts': renderContacts(); break;
+                case 'channels': renderChannels(); break;
+                case 'gifts': renderGifts(); break;
+                case 'vip': renderVIP(); break;
+                case 'settings': renderSettings(); break;
+                default: renderChats();
+            }
+        }
+
+        // ==================== ЧАТЫ ====================
+        function renderChats() {
+            if (BeamChat.state.activeChat) {
+                renderChatWindow(BeamChat.state.activeChat);
+                return;
+            }
+
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>Чаты</h2>
+                    <button class="btn btn-primary" id="createChatBtn">➕ Создать чат</button>
+                    <button class="btn btn-primary" id="createChannelBtn">📢 Создать канал</button>
+                </div>
+                <div class="content-body">
+                    <input type="text" class="search-input" id="searchChats" placeholder="🔍 Поиск по чатам...">
+                    <div class="chats-list" id="chatsList"></div>
+                </div>
+            `;
+
+            const chatsList = document.getElementById('chatsList');
+            renderChatsList(chatsList, BeamChat.db.chats);
+
+            document.getElementById('createChatBtn').addEventListener('click', () => {
+                createChatModal.classList.remove('hidden');
+            });
+
+            document.getElementById('createChannelBtn').addEventListener('click', () => {
+                createChannelModal.classList.remove('hidden');
+            });
+
+            document.getElementById('searchChats').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const filtered = BeamChat.db.chats.filter(chat => 
+                    chat.name.toLowerCase().includes(query)
+                );
+                renderChatsList(chatsList, filtered);
+            });
+        }
+
+        function renderChatsList(container, chats) {
+            container.innerHTML = '';
+            
+            if (chats.length === 0) {
+                container.innerHTML = '<div class="empty-state">Чатов нет. Создайте новый!</div>';
+                return;
+            }
+
+            chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'chat-item';
+                item.innerHTML = `
+                    <div class="chat-avatar">${chat.avatar}</div>
+                    <div class="chat-info">
+                        <div class="chat-name">${chat.name}</div>
+                        <div class="chat-last">${chat.lastMsg || 'Нет сообщений'} · ${chat.time || ''}</div>
+                    </div>
+                    ${chat.unread > 0 ? `<span class="unread">${chat.unread}</span>` : ''}
+                `;
+                item.addEventListener('click', () => {
+                    BeamChat.state.activeChat = chat.id;
+                    renderChats();
+                });
+                container.appendChild(item);
+            });
+        }
+
+        function renderChatWindow(chatId) {
+            const chat = BeamChat.db.chats.find(c => c.id === chatId);
+            if (!chat) return;
+
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <button class="btn btn-secondary" id="backBtn">← Назад</button>
+                    <h2>${chat.name}</h2>
+                    <button class="btn btn-primary" id="chatSettingsBtn">⚙️ Настройки</button>
+                </div>
+                <div class="messages-container" id="messages"></div>
+                <div class="message-input-area">
+                    <input type="text" class="message-input" id="messageInput" placeholder="Сообщение...">
+                    <button class="btn btn-primary" id="sendBtn">Отправить</button>
+                </div>
+            `;
+
+            const messages = BeamChat.db.messages[chatId] || [];
+            const messagesDiv = document.getElementById('messages');
+            
+            if (messages.length === 0) {
+                messagesDiv.innerHTML = '<div class="empty-state">Нет сообщений. Напишите что-нибудь!</div>';
+            } else {
+                messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `message ${msg.outgoing ? 'outgoing' : 'incoming'}`;
+                    msgDiv.innerHTML = `
+                        <div class="message-bubble">${msg.text}</div>
+                        <div class="message-footer">
+                            <span>${msg.time}</span>
+                            <div>
+                                ${(msg.reactions || []).map(r => `<span class="reaction" onclick="addReaction(${chatId}, ${msg.id}, '${r}')">${r}</span>`).join('')}
+                                <span class="reaction" onclick="showReactionPicker(${chatId}, ${msg.id})">➕</span>
+                            </div>
+                        </div>
+                    `;
+                    messagesDiv.appendChild(msgDiv);
+                });
+            }
+
+            document.getElementById('sendBtn').addEventListener('click', () => {
+                const input = document.getElementById('messageInput');
+                if (!input.value.trim()) return;
+                
+                const newMsg = {
+                    id: Date.now(),
+                    text: input.value,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    outgoing: true,
+                    reactions: []
+                };
+                
+                if (!BeamChat.db.messages[chatId]) BeamChat.db.messages[chatId] = [];
+                BeamChat.db.messages[chatId].push(newMsg);
+                chat.lastMsg = input.value;
+                chat.time = 'только что';
+                
+                renderChatWindow(chatId);
+            });
+
+            document.getElementById('backBtn').addEventListener('click', () => {
+                BeamChat.state.activeChat = null;
+                renderChats();
+            });
+
+            document.getElementById('chatSettingsBtn').addEventListener('click', () => {
+                showChatSettings(chat);
+            });
+        }
+
+        function showChatSettings(chat) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-title">Настройки чата</div>
+                    <p style="color:white; margin-bottom:10px;">Название: ${chat.name}</p>
+                    <p style="color:white; margin-bottom:10px;">Тип: ${chat.type === 'private' ? 'Личный' : 'Групповой'}</p>
+                    <input type="text" id="newChatName" class="modal-input" placeholder="Новое название" value="${chat.name}">
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" id="renameChatBtn">Переименовать</button>
+                        <button class="btn btn-danger" id="deleteChatBtn">Удалить чат</button>
+                        <button class="btn btn-secondary" id="closeModal">Закрыть</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('renameChatBtn').addEventListener('click', () => {
+                const newName = document.getElementById('newChatName').value.trim();
+                if (newName) {
+                    chat.name = newName;
+                    modal.remove();
+                    renderChatWindow(chat.id);
+                }
+            });
+
+            document.getElementById('deleteChatBtn').addEventListener('click', () => {
+                if (confirm('Удалить этот чат?')) {
+                    const index = BeamChat.db.chats.findIndex(c => c.id === chat.id);
+                    if (index !== -1) BeamChat.db.chats.splice(index, 1);
+                    delete BeamChat.db.messages[chat.id];
+                    modal.remove();
+                    BeamChat.state.activeChat = null;
+                    renderChats();
+                }
+            });
+
+            document.getElementById('closeModal').addEventListener('click', () => modal.remove());
+        }
+
+        // ==================== КОНТАКТЫ ====================
+        function renderContacts() {
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>Контакты</h2>
+                    <button class="btn btn-primary" id="addContactBtn">➕ Добавить</button>
+                </div>
+                <div class="content-body">
+                    <input type="text" class="search-input" id="searchContacts" placeholder="🔍 Поиск контактов...">
+                    <div class="contacts-list" id="contactsList"></div>
+                </div>
+            `;
+
+            const contactsList = document.getElementById('contactsList');
+            renderContactsList(contactsList, BeamChat.db.contacts);
+
+            document.getElementById('addContactBtn').addEventListener('click', () => {
+                const name = prompt('Имя контакта:');
+                if (name) {
+                    BeamChat.db.contacts.push({
+                        id: Date.now(),
+                        name: name,
+                        status: 'offline',
+                        avatar: name.charAt(0),
+                        subscribers: 0
+                    });
+                    renderContacts();
+                }
+            });
+
+            document.getElementById('searchContacts').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const filtered = BeamChat.db.contacts.filter(c => 
+                    c.name.toLowerCase().includes(query)
+                );
+                renderContactsList(contactsList, filtered);
+            });
+        }
+
+        function renderContactsList(container, contacts) {
+            container.innerHTML = '';
+            
+            contacts.forEach(contact => {
+                const item = document.createElement('div');
+                item.className = 'contact-item';
+                item.innerHTML = `
+                    <div class="contact-avatar">${contact.avatar}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-status">
+                            ${contact.status === 'online' ? '● В сети' : '○ Не в сети'}
+                            · Подписчиков: ${contact.subscribers || 0}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-primary" data-id="${contact.id}" data-action="chat">💬</button>
+                        <button class="btn btn-secondary" data-id="${contact.id}" data-action="subscribe">🔔</button>
+                        <button class="btn btn-secondary" data-id="${contact.id}" data-action="gift">🎁</button>
+                    </div>
+                `;
+                
+                item.querySelector('[data-action="chat"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const newChat = {
+                        id: Date.now(),
+                        name: contact.name,
+                        type: 'private',
+                        avatar: contact.avatar,
+                        lastMsg: 'Новый чат',
+                        time: 'только что',
+                        unread: 0
+                    };
+                    BeamChat.db.chats.push(newChat);
+                    BeamChat.db.messages[newChat.id] = [];
+                    showView('chats');
+                });
+                
+                item.querySelector('[data-action="subscribe"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    contact.subscribers = (contact.subscribers || 0) + 1;
+                    if (BeamChat.currentUser) {
+                        BeamChat.currentUser.subscribers = (BeamChat.currentUser.subscribers || 0) + 1;
+                    }
+                    renderContacts();
+                });
+                
+                item.querySelector('[data-action="gift"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openGiftModal(contact);
+                });
+                
+                container.appendChild(item);
+            });
+        }
+
+        // ==================== КАНАЛЫ ====================
+        function renderChannels() {
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>Каналы</h2>
+                    <button class="btn btn-primary" id="createChannelBtn">📢 Создать канал</button>
+                </div>
+                <div class="content-body">
+                    <div class="channels-list" id="channelsList"></div>
+                </div>
+            `;
+
+            const channelsList = document.getElementById('channelsList');
+            BeamChat.db.channels.forEach(channel => {
+                const item = document.createElement('div');
+                item.className = 'channel-item';
+                item.innerHTML = `
+                    <div class="channel-avatar">${channel.avatar}</div>
+                    <div class="channel-info">
+                        <div class="channel-name">${channel.name}</div>
+                        <div class="channel-subscribers">👥 ${channel.subscribers} подписчиков</div>
+                    </div>
+                    <button class="btn btn-${channel.isSubscribed ? 'secondary' : 'primary'}" data-id="${channel.id}">
+                        ${channel.isSubscribed ? '✅ Подписан' : '🔔 Подписаться'}
+                    </button>
+                    <button class="btn btn-secondary" data-id="${channel.id}" data-action="settings">⚙️</button>
+                `;
+                
+                item.querySelector('button:first-of-type').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    channel.isSubscribed = !channel.isSubscribed;
+                    if (channel.isSubscribed) {
+                        channel.subscribers++;
+                    } else {
+                        channel.subscribers--;
+                    }
+                    renderChannels();
+                });
+                
+                item.querySelector('[data-action="settings"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showChannelSettings(channel);
+                });
+                
+                item.addEventListener('click', () => {
+                    const channelChat = BeamChat.db.chats.find(c => c.id === channel.id);
+                    if (channelChat) {
+                        BeamChat.state.activeChat = channelChat.id;
+                        renderChats();
+                    }
+                });
+                
+                channelsList.appendChild(item);
+            });
+
+            document.getElementById('createChannelBtn').addEventListener('click', () => {
+                createChannelModal.classList.remove('hidden');
+            });
+        }
+
+        function showChannelSettings(channel) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-title">Настройки канала</div>
+                    <p style="color:white; margin-bottom:10px;">Название: ${channel.name}</p>
+                    <p style="color:white; margin-bottom:10px;">Подписчиков: ${channel.subscribers}</p>
+                    <input type="text" id="newChannelName" class="modal-input" placeholder="Новое название" value="${channel.name}">
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" id="renameChannelBtn">Переименовать</button>
+                        <button class="btn btn-danger" id="deleteChannelBtn">Удалить канал</button>
+                        <button class="btn btn-secondary" id="closeModal">Закрыть</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('renameChannelBtn').addEventListener('click', () => {
+                const newName = document.getElementById('newChannelName').value.trim();
+                if (newName) {
+                    channel.name = newName;
+                    const channelChat = BeamChat.db.chats.find(c => c.id === channel.id);
+                    if (channelChat) channelChat.name = newName;
+                    modal.remove();
+                    renderChannels();
+                }
+            });
+
+            document.getElementById('deleteChannelBtn').addEventListener('click', () => {
+                if (confirm('Удалить этот канал?')) {
+                    const index = BeamChat.db.channels.findIndex(c => c.id === channel.id);
+                    if (index !== -1) BeamChat.db.channels.splice(index, 1);
+                    
+                    const chatIndex = BeamChat.db.chats.findIndex(c => c.id === channel.id);
+                    if (chatIndex !== -1) BeamChat.db.chats.splice(chatIndex, 1);
+                    
+                    delete BeamChat.db.messages[channel.id];
+                    modal.remove();
+                    renderChannels();
+                }
+            });
+
+            document.getElementById('closeModal').addEventListener('click', () => modal.remove());
+        }
+
+        // ==================== ПОДАРКИ ====================
+        function renderGifts() {
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>🎁 Магазин подарков</h2>
+                    <div style="background:#1f294a; padding:10px 20px; border-radius:40px;">
+                        💰 ${BeamChat.currentUser?.coins || 0} монет
+                    </div>
+                </div>
+                <div class="content-body">
+                    <div class="gifts-grid">
+                        ${BeamChat.db.gifts.map(gift => `
+                            <div class="gift-card">
+                                <div class="gift-icon">${gift.icon}</div>
+                                <div style="font-weight:600;">${gift.name}</div>
+                                <div style="color:#ffd966; margin:10px 0;">${gift.price}💰</div>
+                                ${gift.vipOnly ? '<div style="color:gold;">👑 VIP</div>' : ''}
+                                <button class="btn btn-primary" data-gift='${JSON.stringify(gift)}' style="margin-top:10px;">Купить</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.querySelectorAll('[data-gift]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const gift = JSON.parse(e.target.dataset.gift);
+                    buyGift(gift);
+                });
+            });
+        }
+
+        function buyGift(gift) {
+            if (!BeamChat.currentUser) {
+                alert('Сначала войдите в систему');
+                authModal.classList.remove('hidden');
+                return;
+            }
+            
+            if (gift.vipOnly && !BeamChat.currentUser.isVip) {
+                alert('Этот подарок только для VIP');
+                return;
+            }
+            
+            if (BeamChat.currentUser.coins < gift.price) {
+                alert('Недостаточно монет');
+                return;
+            }
+            
+            BeamChat.currentUser.coins -= gift.price;
+            alert(`Подарок ${gift.name} куплен!`);
+            renderGifts();
+        }
+
+        function openGiftModal(contact) {
+            const grid = document.getElementById('giftsGrid');
+            grid.innerHTML = BeamChat.db.gifts.map(gift => `
+                <div class="gift-card">
+                    <div class="gift-icon">${gift.icon}</div>
+                    <div>${gift.name}</div>
+                    <div>${gift.price}💰</div>
+                    <button class="btn btn-primary" onclick="sendGift(${contact.id}, ${gift.id})">Отправить</button>
+                </div>
+            `).join('');
+            
+            giftModal.classList.remove('hidden');
+        }
+
+        window.sendGift = function(contactId, giftId) {
+            const contact = BeamChat.db.contacts.find(c => c.id === contactId);
+            const gift = BeamChat.db.gifts.find(g => g.id === giftId);
+            
+            if (!BeamChat.currentUser) {
+                alert('Сначала войдите в систему');
+                return;
+            }
+            
+            if (BeamChat.currentUser.coins >= gift.price) {
+                BeamChat.currentUser.coins -= gift.price;
+                alert(`Подарок ${gift.name} отправлен ${contact.name}!`);
+                giftModal.classList.add('hidden');
+            } else {
+                alert('Недостаточно монет');
+            }
+        };
+
+        // ==================== VIP ====================
+        function renderVIP() {
+            const isVip = BeamChat.currentUser?.isVip || false;
+            
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>👑 VIP Подписка</h2>
+                </div>
+                <div class="content-body">
+                    ${isVip ? `
+                        <div style="background: linear-gradient(145deg, #2a3f7a, #1c2b5a); border-radius: 32px; padding: 40px; text-align: center; margin-bottom: 30px; border: 2px solid gold;">
+                            <div style="font-size: 5rem;">👑</div>
+                            <h3 style="font-size: 2rem; margin:20px 0; color:white;">Вы VIP!</h3>
+                            <p style="color:#ffd966;">Спасибо за поддержку</p>
+                        </div>
+                    ` : `
+                        <div style="background: #1a2440; border-radius: 32px; padding: 40px; text-align: center; margin-bottom: 30px;">
+                            <div style="font-size: 5rem;">✨</div>
+                            <h3 style="margin:20px 0; color:white;">Станьте VIP</h3>
+                            <p style="color:#8a9fd1; margin-bottom:30px;">Получите эксклюзивные возможности</p>
+                            <button class="btn btn-primary" id="buyVipBtn" style="font-size:1.2rem; padding:15px 40px;">Купить VIP за 150💰</button>
+                        </div>
+                    `}
+                    
+                    <div style="background: #1a2440; border-radius: 24px; padding: 25px;">
+                        <h3 style="margin-bottom:20px; color:white;">Преимущества VIP</h3>
+                        <ul style="list-style: none; color:#b5d0ff;">
+                            <li style="margin:10px 0;">✓ Эксклюзивные подарки</li>
+                            <li style="margin:10px 0;">✓ Специальный значок в профиле</li>
+                            <li style="margin:10px 0;">✓ 100 монет ежемесячно</li>
+                            <li style="margin:10px 0;">✓ Ранний доступ к функциям</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            const buyBtn = document.getElementById('buyVipBtn');
+            if (buyBtn) {
+                buyBtn.addEventListener('click', () => {
+                    if (!BeamChat.currentUser) {
+                        alert('Сначала войдите в систему');
+                        authModal.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    if (BeamChat.currentUser.coins >= 150) {
+                        BeamChat.currentUser.coins -= 150;
+                        BeamChat.currentUser.isVip = true;
+                        renderVIP();
+                        updateUI();
+                    } else {
+                        alert('Недостаточно монет');
+                    }
+                });
+            }
+        }
+
+        // ==================== НАСТРОЙКИ ====================
+        function renderSettings() {
+            if (!BeamChat.currentUser) {
+                mainContent.innerHTML = `
+                    <div class="content-header">
+                        <h2>Настройки</h2>
+                    </div>
+                    <div class="content-body">
+                        <div class="empty-state">
+                            <p style="margin-bottom:20px;">Войдите в систему, чтобы увидеть настройки</p>
+                            <button class="btn btn-primary" id="loginFromSettings">Войти</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('loginFromSettings').addEventListener('click', () => {
+                    authModal.classList.remove('hidden');
+                });
+                return;
+            }
+
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>⚙️ Настройки</h2>
+                </div>
+                <div class="content-body">
+                    <div class="settings-section">
+                        <h3 style="margin-bottom:25px; color:white;">Личная информация</h3>
+                        
+                        <div class="settings-row">
+                            <span>Имя пользователя</span>
+                            <input type="text" id="settingsUsername" class="modal-input" style="width:300px;" value="${BeamChat.currentUser.username || ''}">
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>Электронная почта</span>
+                            <input type="email" id="settingsEmail" class="modal-input" style="width:300px;" value="${BeamChat.currentUser.email || ''}">
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>VIP статус</span>
+                            <span class="${BeamChat.currentUser.isVip ? 'stat-value' : ''}">${BeamChat.currentUser.isVip ? '✅ VIP' : '❌ Нет'}</span>
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>Монеты</span>
+                            <span class="stat-value">💰 ${BeamChat.currentUser.coins || 0}</span>
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>Подписчики</span>
+                            <span class="stat-value">👥 ${BeamChat.currentUser.subscribers || 0}</span>
+                        </div>
+                        
+                        <div style="margin-top:30px; display:flex; gap:15px;">
+                            <button class="btn btn-primary" id="saveSettingsBtn">Сохранить изменения</button>
+                            <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                BeamChat.currentUser.username = document.getElementById('settingsUsername').value;
+                BeamChat.currentUser.email = document.getElementById('settingsEmail').value;
+                alert('Настройки сохранены');
+                updateUI();
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                BeamChat.currentUser = null;
+                BeamChat.state.activeChat = null;
+                updateUI();
+                showView('chats');
+            });
+        }
+
+        // ==================== РЕАКЦИИ ====================
+        window.addReaction = function(chatId, msgId, reaction) {
+            const msg = BeamChat.db.messages[chatId]?.find(m => m.id === msgId);
+            if (msg) {
+                if (!msg.reactions) msg.reactions = [];
+                if (msg.reactions.includes(reaction)) {
+                    msg.reactions = msg.reactions.filter(r => r !== reaction);
+                } else {
+                    msg.reactions.push(reaction);
+                }
+                renderChatWindow(chatId);
+            }
+        };
+
+        window.showReactionPicker = function(chatId, msgId) {
+            const reactions = ['👍', '❤️', '🔥', '😂', '😮', '😢', '👎'];
+            const picker = document.createElement('div');
+            picker.style.cssText = `
+                position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+                background: #1a2440; padding:20px; border-radius:40px; border:2px solid #4f7ae0;
+                display:flex; gap:10px; z-index:2000;
+            `;
+            picker.innerHTML = reactions.map(r => 
+                `<span style="font-size:2rem; cursor:pointer;" onclick="addReaction(${chatId}, ${msgId}, '${r}'); this.parentElement.remove();">${r}</span>`
+            ).join('');
+            document.body.appendChild(picker);
+            
+            setTimeout(() => picker.remove(), 5000);
+        };
+
+        // ==================== АВТОРИЗАЦИЯ ====================
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirm').value;
+
+            if (!username || !email || !password || !confirm) {
+                alert('Заполните все поля');
+                return;
+            }
+
+            if (password !== confirm) {
+                alert('Пароли не совпадают');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Пароль должен быть минимум 6 символов');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                username: username,
+                email: email,
+                password: password,
+                isVip: false,
+                coins: 200,
+                subscribers: 0
+            };
+
+            BeamChat.db.users.push(newUser);
+            BeamChat.currentUser = newUser;
+            
+            authModal.classList.add('hidden');
+            updateUI();
+            showView('chats');
+        });
+
+        document.getElementById('switchToLoginBtn').addEventListener('click', () => {
+            const title = document.getElementById('authTitle');
+            if (title.textContent === 'Регистрация') {
+                title.textContent = 'Вход';
+                document.getElementById('registerBtn').textContent = 'Войти';
+                document.getElementById('switchToLoginBtn').textContent = 'Регистрация';
+            } else {
+                title.textContent = 'Регистрация';
+                document.getElementById('registerBtn').textContent = 'Зарегистрироваться';
+                document.getElementById('switchToLoginBtn').textContent = 'Войти';
+            }
+        });
+
+        document.getElementById('guestBtn').addEventListener('click', () => {
+            BeamChat.currentUser = {
+                id: 'guest_' + Date.now(),
+                username: 'Гость',
+                email: 'guest@beam.chat',
+                isVip: false,
+                coins: 100,
+                subscribers: 0
+            };
+            authModal.classList.add('hidden');
+            updateUI();
+            showView('chats');
+        });
+
+        // ==================== МОДАЛКИ ====================
+        document.getElementById('closeCreateChat').addEventListener('click', () => {
+            createChatModal.classList.add('hidden');
+        });
+
+        document.getElementById('createChatConfirm').addEventListener('click', () => {
+            const name = document.getElementById('chatName').value.trim();
+            const type = document.getElementById('chatType').value;
+            
+            if (!name) {
+                alert('Введите название чата');
+                return;
+            }
+
+            const newChat = {
+                id: Date.now(),
+                name: name,
+                type: type,
+                avatar: type === 'group' ? '👥' : name.charAt(0),
+                lastMsg: 'Чат создан',
+                time: 'только что',
+                unread: 0
+            };
+
+            BeamChat.db.chats.push(newChat);
+            BeamChat.db.messages[newChat.id] = [];
+            createChatModal.classList.add('hidden');
+            document.getElementById('chatName').value = '';
+            renderChats();
+        });
+
+        document.getElementById('closeCreateChannel').addEventListener('click', () => {
+            createChannelModal.classList.add('hidden');
+        });
+
+        document.getElementById('createChannelConfirm').addEventListener('click', () => {
+            const name = document.getElementById('channelName').value.trim();
+            const desc = document.getElementById('channelDesc').value.trim();
+            
+            if (!name) {
+                alert('Введите название канала');
+                return;
+            }
+
+            const newChannel = {
+                id: Date.now(),
+                name: name,
+                description: desc,
+                avatar: '📢',
+                subscribers: 1,
+                isSubscribed: true
+            };
+
+            BeamChat.db.channels.push(newChannel);
+            
+            BeamChat.db.chats.push({
+                id: newChannel.id,
+                name: name,
+                type: 'channel',
+                avatar: '📢',
+                lastMsg: 'Канал создан',
+                time: 'только что',
+                unread: 0
+            });
+            
+            BeamChat.db.messages[newChannel.id] = [];
+            createChannelModal.classList.add('hidden');
+            document.getElementById('channelName').value = '';
+            document.getElementById('channelDesc').value = '';
+            renderChannels();
+        });
+
+        document.getElementById('closeGiftModal').addEventListener('click', () => {
+            giftModal.classList.add('hidden');
+        });
+
+        // ==================== НАВИГАЦИЯ ====================
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => showView(item.dataset.view));
+        });
+
+        document.getElementById('profileBtn').addEventListener('click', () => {
+            if (!BeamChat.currentUser) {
+                authModal.classList.remove('hidden');
+            } else {
+                showView('settings');
+            }
+        });
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        // Показываем модалку регистрации при загрузке, если нет пользователя
+        setTimeout(() => {
+            if (!BeamChat.currentUser) {
+                authModal.classList.remove('hidden');
+            }
+        }, 500);
+
+        updateUI();
+        renderMainContent();
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeamChat · Полноценный мессенджер</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: #0a0c14;
+            color: white;
+            overflow: hidden;
+        }
+        .app {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+        /* Боковое меню */
+        .sidebar {
+            width: 300px;
+            background: #121b30;
+            border-right: 1px solid #253153;
+            display: flex;
+            flex-direction: column;
+        }
+        .profile-header {
+            padding: 20px;
+            border-bottom: 1px solid #253153;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .avatar {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(145deg, #2b4b9e, #1f3a7a);
+            border-radius: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .user-info h3 {
+            font-size: 1.1rem;
+            color: white;
+        }
+        .user-info p {
+            font-size: 0.8rem;
+            color: #8a9fd1;
+        }
+        .vip-badge {
+            background: gold;
+            color: #0a0c14;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 4px;
+        }
+        .nav-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 25px;
+            color: #a7b9f0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: #1f2b4a;
+            color: white;
+            border-left: 3px solid #4f7ae0;
+        }
+        .badge {
+            background: #bf4b4b;
+            color: white;
+            border-radius: 30px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            margin-left: auto;
+        }
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .content-header {
+            padding: 20px 30px;
+            background: #121b30;
+            border-bottom: 1px solid #253153;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .content-header h2 {
+            font-size: 1.8rem;
+            color: white;
+        }
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 30px;
+        }
+        /* Кнопки */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .btn-primary {
+            background: #2b4b9e;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #3d62c0;
+        }
+        .btn-secondary {
+            background: #2f3d66;
+            color: white;
+        }
+        .btn-success {
+            background: #2e7d32;
+            color: white;
+        }
+        .btn-danger {
+            background: #8b2e2e;
+            color: white;
+        }
+        /* Списки */
+        .chats-list, .contacts-list, .channels-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-item, .contact-item, .channel-item {
+            background: #1a2440;
+            border-radius: 28px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            border: 1px solid #2f3d66;
+            transition: 0.2s;
+        }
+        .chat-item:hover, .contact-item:hover, .channel-item:hover {
+            background: #223052;
+            border-color: #4f7ae0;
+        }
+        .chat-avatar, .contact-avatar, .channel-avatar {
+            width: 56px;
+            height: 56px;
+            background: #2b3e7a;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+        .chat-info, .contact-info, .channel-info {
+            flex: 1;
+        }
+        .chat-name, .contact-name, .channel-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: white;
+        }
+        .chat-last, .contact-status, .channel-subscribers {
+            color: #8a9fd1;
+            font-size: 0.9rem;
+        }
+        .unread {
+            background: #4f7ae0;
+            border-radius: 30px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            color: white;
+        }
+        /* Модальные окна */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1a2440;
+            border-radius: 48px;
+            padding: 40px;
+            min-width: 450px;
+            border: 2px solid #4f7ae0;
+        }
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+        }
+        .modal-input {
+            width: 100%;
+            background: #1f294a;
+            border: 1px solid #314a7a;
+            border-radius: 40px;
+            padding: 15px 20px;
+            color: white;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .modal-input:focus {
+            border-color: #5f8aff;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        /* Сообщения */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 70%;
+            display: flex;
+            flex-direction: column;
+        }
+        .message.outgoing {
+            align-self: flex-end;
+        }
+        .message-bubble {
+            padding: 12px 18px;
+            border-radius: 24px;
+            background: #262f50;
+            color: white;
+        }
+        .message.outgoing .message-bubble {
+            background: #2b4b9e;
+        }
+        .message-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            font-size: 0.8rem;
+            color: #8a9fd1;
+        }
+        .reaction {
+            cursor: pointer;
+            padding: 2px 6px;
+            background: #1f294a;
+            border-radius: 20px;
+            color: white;
+        }
+        .message-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            background: #121b30;
+        }
+        .message-input {
+            flex: 1;
+            background: #1f294a;
+            border: 1px solid #314a7a;
+            border-radius: 40px;
+            padding: 15px 20px;
+            color: white;
+            outline: none;
+        }
+        /* Подарки */
+        .gifts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .gift-card {
+            background: #1f2a48;
+            border-radius: 24px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #3e5a9c;
+            color: white;
+        }
+        .gift-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        /* Настройки */
+        .settings-section {
+            background: #1a2440;
+            border-radius: 32px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #2a3a60;
+            color: white;
+        }
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+        .twofa-enabled {
+            color: #4cd964;
+            font-weight: 600;
+        }
+        .stat-value {
+            color: #ffd966;
+            font-weight: 600;
+        }
+        /* Поиск */
+        .search-input {
+            width: 100%;
+            background: #1f294a;
+            border: 1px solid #314a7a;
+            border-radius: 40px;
+            padding: 12px 20px;
+            color: white;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        .empty-state {
+            text-align: center;
+            color: #8a9fd1;
+            padding: 60px 20px;
+            background: #1a2440;
+            border-radius: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <!-- Боковое меню -->
+        <div class="sidebar" id="sidebar">
+            <div class="profile-header" id="profileBtn">
+                <div class="avatar" id="avatar">⚡</div>
+                <div class="user-info">
+                    <h3 id="displayName">Гость</h3>
+                    <p id="displayEmail">не авторизован</p>
+                    <span class="vip-badge hidden" id="vipBadge">VIP</span>
+                </div>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" data-view="chats">
+                    <span>💬</span> Чаты
+                    <span class="badge" id="chatsBadge">0</span>
+                </div>
+                <div class="nav-item" data-view="contacts">
+                    <span>👥</span> Контакты
+                </div>
+                <div class="nav-item" data-view="channels">
+                    <span>📢</span> Каналы
+                </div>
+                <div class="nav-item" data-view="gifts">
+                    <span>🎁</span> Подарки
+                </div>
+                <div class="nav-item" data-view="vip">
+                    <span>👑</span> VIP подписка
+                </div>
+                <div class="nav-item" data-view="settings">
+                    <span>⚙️</span> Настройки
+                </div>
+            </div>
+        </div>
+
+        <!-- Основной контент -->
+        <div class="main-content" id="mainContent">
+            <!-- Динамически заполняется -->
+        </div>
+    </div>
+
+    <!-- Модальное окно регистрации/входа -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-title" id="authTitle">Регистрация</div>
+            <input type="text" class="modal-input" id="regUsername" placeholder="Имя пользователя">
+            <input type="email" class="modal-input" id="regEmail" placeholder="Электронная почта">
+            <input type="password" class="modal-input" id="regPassword" placeholder="Пароль">
+            <input type="password" class="modal-input" id="regConfirm" placeholder="Подтверждение пароля">
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="registerBtn" style="flex:1;">Зарегистрироваться</button>
+                <button class="btn btn-secondary" id="switchToLoginBtn">Войти</button>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" id="guestBtn">Войти как гость</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания чата -->
+    <div class="modal hidden" id="createChatModal">
+        <div class="modal-content">
+            <div class="modal-title">Создать чат</div>
+            <select class="modal-input" id="chatType">
+                <option value="private">Личный чат</option>
+                <option value="group">Групповой чат</option>
+            </select>
+            <input type="text" class="modal-input" id="chatName" placeholder="Название чата">
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="createChatConfirm">Создать</button>
+                <button class="btn btn-secondary" id="closeCreateChat">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания канала -->
+    <div class="modal hidden" id="createChannelModal">
+        <div class="modal-content">
+            <div class="modal-title">Создать канал</div>
+            <input type="text" class="modal-input" id="channelName" placeholder="Название канала">
+            <textarea class="modal-input" id="channelDesc" placeholder="Описание канала" rows="3"></textarea>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" id="createChannelConfirm">Создать</button>
+                <button class="btn btn-secondary" id="closeCreateChannel">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подарков -->
+    <div class="modal hidden" id="giftModal">
+        <div class="modal-content">
+            <div class="modal-title">Выберите подарок</div>
+            <div class="gifts-grid" id="giftsGrid"></div>
+            <button class="btn btn-secondary" id="closeGiftModal">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== ДАННЫЕ ====================
+        const BeamChat = {
+            currentUser: null,
+            state: {
+                currentView: 'chats',
+                activeChat: null,
+                activeChannel: null
+            },
+            db: {
+                users: [],
+                chats: [],
+                channels: [],
+                contacts: [],
+                messages: {},
+                gifts: [
+                    { id: 1, name: '💎 Алмаз', price: 50, icon: '💎' },
+                    { id: 2, name: '🌹 Роза', price: 10, icon: '🌹' },
+                    { id: 3, name: '🚀 Ракета', price: 100, icon: '🚀' },
+                    { id: 4, name: '👑 Корона VIP', price: 200, icon: '👑', vipOnly: true },
+                    { id: 5, name: '🎂 Торт', price: 75, icon: '🎂' },
+                    { id: 6, name: '🐻 Мишка', price: 30, icon: '🐻' }
+                ]
+            }
+        };
+
+        // Добавляем начальные данные
+        BeamChat.db.chats = [
+            { id: 1, name: 'Анна Светлова', type: 'private', avatar: 'А', lastMsg: 'Привет!', time: '10:30', unread: 2 },
+            { id: 2, name: 'Команда Beam', type: 'group', avatar: '👥', lastMsg: 'Встреча в 15:00', time: 'Вчера', unread: 0 },
+            { id: 3, name: 'Новости Beam', type: 'channel', avatar: '📢', lastMsg: 'Релиз 2.0', time: '12:45', unread: 5 }
+        ];
+
+        BeamChat.db.channels = [
+            { id: 101, name: 'Beam Official', avatar: '📡', subscribers: 1250, isSubscribed: true },
+            { id: 102, name: 'Игровой мир', avatar: '🎮', subscribers: 540, isSubscribed: false }
+        ];
+
+        BeamChat.db.contacts = [
+            { id: 1, name: 'Анна Светлова', status: 'online', avatar: 'А', subscribers: 120 },
+            { id: 2, name: 'Дмитрий Волков', status: 'offline', avatar: 'Д', subscribers: 45 },
+            { id: 3, name: 'Екатерина Луч', status: 'online', avatar: 'Е', subscribers: 230 }
+        ];
+
+        BeamChat.db.messages = {
+            1: [
+                { id: 1, text: 'Привет! Как дела?', time: '10:30', outgoing: false, reactions: [] },
+                { id: 2, text: 'Отлично! Готов к работе', time: '10:32', outgoing: true, reactions: [] }
+            ],
+            2: [
+                { id: 1, text: 'Всем привет в группе', time: '09:15', outgoing: false, reactions: ['👍'] }
+            ],
+            3: [
+                { id: 1, text: 'Вышел новый релиз', time: '12:45', outgoing: false, reactions: ['🔥', '👍'] }
+            ]
+        };
+
+        // ==================== UI ЭЛЕМЕНТЫ ====================
+        const mainContent = document.getElementById('mainContent');
+        const authModal = document.getElementById('authModal');
+        const createChatModal = document.getElementById('createChatModal');
+        const createChannelModal = document.getElementById('createChannelModal');
+        const giftModal = document.getElementById('giftModal');
+        const displayName = document.getElementById('displayName');
+        const displayEmail = document.getElementById('displayEmail');
+        const avatar = document.getElementById('avatar');
+        const vipBadge = document.getElementById('vipBadge');
+        const chatsBadge = document.getElementById('chatsBadge');
+
+        // ==================== ФУНКЦИИ ====================
+        function updateUI() {
+            if (BeamChat.currentUser) {
+                displayName.textContent = BeamChat.currentUser.username;
+                displayEmail.textContent = BeamChat.currentUser.email || 'нет почты';
+                avatar.textContent = BeamChat.currentUser.username.charAt(0).toUpperCase();
+                if (BeamChat.currentUser.isVip) {
+                    vipBadge.classList.remove('hidden');
+                } else {
+                    vipBadge.classList.add('hidden');
+                }
+            } else {
+                displayName.textContent = 'Гость';
+                displayEmail.textContent = 'не авторизован';
+                avatar.textContent = '⚡';
+                vipBadge.classList.add('hidden');
+            }
+            
+            const unreadCount = BeamChat.db.chats.reduce((sum, chat) => sum + (chat.unread || 0), 0);
+            chatsBadge.textContent = unreadCount || '0';
+        }
+
+        function showView(view) {
+            BeamChat.state.currentView = view;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.view === view) item.classList.add('active');
+            });
+            renderMainContent();
+        }
+
+        function renderMainContent() {
+            const view = BeamChat.state.currentView;
+            mainContent.innerHTML = '';
+
+            switch(view) {
+                case 'chats': renderChats(); break;
+                case 'contacts': renderContacts(); break;
+                case 'channels': renderChannels(); break;
+                case 'gifts': renderGifts(); break;
+                case 'vip': renderVIP(); break;
+                case 'settings': renderSettings(); break;
+                default: renderChats();
+            }
+        }
+
+        // ==================== ЧАТЫ ====================
+        function renderChats() {
+            if (BeamChat.state.activeChat) {
+                renderChatWindow(BeamChat.state.activeChat);
+                return;
+            }
+
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>Чаты</h2>
+                    <button class="btn btn-primary" id="createChatBtn">➕ Создать чат</button>
+                    <button class="btn btn-primary" id="createChannelBtn">📢 Создать канал</button>
+                </div>
+                <div class="content-body">
+                    <input type="text" class="search-input" id="searchChats" placeholder="🔍 Поиск по чатам...">
+                    <div class="chats-list" id="chatsList"></div>
+                </div>
+            `;
+
+            const chatsList = document.getElementById('chatsList');
+            renderChatsList(chatsList, BeamChat.db.chats);
+
+            document.getElementById('createChatBtn').addEventListener('click', () => {
+                createChatModal.classList.remove('hidden');
+            });
+
+            document.getElementById('createChannelBtn').addEventListener('click', () => {
+                createChannelModal.classList.remove('hidden');
+            });
+
+            document.getElementById('searchChats').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const filtered = BeamChat.db.chats.filter(chat => 
+                    chat.name.toLowerCase().includes(query)
+                );
+                renderChatsList(chatsList, filtered);
+            });
+        }
+
+        function renderChatsList(container, chats) {
+            container.innerHTML = '';
+            
+            if (chats.length === 0) {
+                container.innerHTML = '<div class="empty-state">Чатов нет. Создайте новый!</div>';
+                return;
+            }
+
+            chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'chat-item';
+                item.innerHTML = `
+                    <div class="chat-avatar">${chat.avatar}</div>
+                    <div class="chat-info">
+                        <div class="chat-name">${chat.name}</div>
+                        <div class="chat-last">${chat.lastMsg || 'Нет сообщений'} · ${chat.time || ''}</div>
+                    </div>
+                    ${chat.unread > 0 ? `<span class="unread">${chat.unread}</span>` : ''}
+                `;
+                item.addEventListener('click', () => {
+                    BeamChat.state.activeChat = chat.id;
+                    renderChats();
+                });
+                container.appendChild(item);
+            });
+        }
+
+        function renderChatWindow(chatId) {
+            const chat = BeamChat.db.chats.find(c => c.id === chatId);
+            if (!chat) return;
+
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <button class="btn btn-secondary" id="backBtn">← Назад</button>
+                    <h2>${chat.name}</h2>
+                    <button class="btn btn-primary" id="chatSettingsBtn">⚙️ Настройки</button>
+                </div>
+                <div class="messages-container" id="messages"></div>
+                <div class="message-input-area">
+                    <input type="text" class="message-input" id="messageInput" placeholder="Сообщение...">
+                    <button class="btn btn-primary" id="sendBtn">Отправить</button>
+                </div>
+            `;
+
+            const messages = BeamChat.db.messages[chatId] || [];
+            const messagesDiv = document.getElementById('messages');
+            
+            if (messages.length === 0) {
+                messagesDiv.innerHTML = '<div class="empty-state">Нет сообщений. Напишите что-нибудь!</div>';
+            } else {
+                messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `message ${msg.outgoing ? 'outgoing' : 'incoming'}`;
+                    msgDiv.innerHTML = `
+                        <div class="message-bubble">${msg.text}</div>
+                        <div class="message-footer">
+                            <span>${msg.time}</span>
+                            <div>
+                                ${(msg.reactions || []).map(r => `<span class="reaction" onclick="addReaction(${chatId}, ${msg.id}, '${r}')">${r}</span>`).join('')}
+                                <span class="reaction" onclick="showReactionPicker(${chatId}, ${msg.id})">➕</span>
+                            </div>
+                        </div>
+                    `;
+                    messagesDiv.appendChild(msgDiv);
+                });
+            }
+
+            document.getElementById('sendBtn').addEventListener('click', () => {
+                const input = document.getElementById('messageInput');
+                if (!input.value.trim()) return;
+                
+                const newMsg = {
+                    id: Date.now(),
+                    text: input.value,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    outgoing: true,
+                    reactions: []
+                };
+                
+                if (!BeamChat.db.messages[chatId]) BeamChat.db.messages[chatId] = [];
+                BeamChat.db.messages[chatId].push(newMsg);
+                chat.lastMsg = input.value;
+                chat.time = 'только что';
+                
+                renderChatWindow(chatId);
+            });
+
+            document.getElementById('backBtn').addEventListener('click', () => {
+                BeamChat.state.activeChat = null;
+                renderChats();
+            });
+
+            document.getElementById('chatSettingsBtn').addEventListener('click', () => {
+                showChatSettings(chat);
+            });
+        }
+
+        function showChatSettings(chat) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-title">Настройки чата</div>
+                    <p style="color:white; margin-bottom:10px;">Название: ${chat.name}</p>
+                    <p style="color:white; margin-bottom:10px;">Тип: ${chat.type === 'private' ? 'Личный' : 'Групповой'}</p>
+                    <input type="text" id="newChatName" class="modal-input" placeholder="Новое название" value="${chat.name}">
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" id="renameChatBtn">Переименовать</button>
+                        <button class="btn btn-danger" id="deleteChatBtn">Удалить чат</button>
+                        <button class="btn btn-secondary" id="closeModal">Закрыть</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('renameChatBtn').addEventListener('click', () => {
+                const newName = document.getElementById('newChatName').value.trim();
+                if (newName) {
+                    chat.name = newName;
+                    modal.remove();
+                    renderChatWindow(chat.id);
+                }
+            });
+
+            document.getElementById('deleteChatBtn').addEventListener('click', () => {
+                if (confirm('Удалить этот чат?')) {
+                    const index = BeamChat.db.chats.findIndex(c => c.id === chat.id);
+                    if (index !== -1) BeamChat.db.chats.splice(index, 1);
+                    delete BeamChat.db.messages[chat.id];
+                    modal.remove();
+                    BeamChat.state.activeChat = null;
+                    renderChats();
+                }
+            });
+
+            document.getElementById('closeModal').addEventListener('click', () => modal.remove());
+        }
+
+        // ==================== КОНТАКТЫ ====================
+        function renderContacts() {
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>Контакты</h2>
+                    <button class="btn btn-primary" id="addContactBtn">➕ Добавить</button>
+                </div>
+                <div class="content-body">
+                    <input type="text" class="search-input" id="searchContacts" placeholder="🔍 Поиск контактов...">
+                    <div class="contacts-list" id="contactsList"></div>
+                </div>
+            `;
+
+            const contactsList = document.getElementById('contactsList');
+            renderContactsList(contactsList, BeamChat.db.contacts);
+
+            document.getElementById('addContactBtn').addEventListener('click', () => {
+                const name = prompt('Имя контакта:');
+                if (name) {
+                    BeamChat.db.contacts.push({
+                        id: Date.now(),
+                        name: name,
+                        status: 'offline',
+                        avatar: name.charAt(0),
+                        subscribers: 0
+                    });
+                    renderContacts();
+                }
+            });
+
+            document.getElementById('searchContacts').addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const filtered = BeamChat.db.contacts.filter(c => 
+                    c.name.toLowerCase().includes(query)
+                );
+                renderContactsList(contactsList, filtered);
+            });
+        }
+
+        function renderContactsList(container, contacts) {
+            container.innerHTML = '';
+            
+            contacts.forEach(contact => {
+                const item = document.createElement('div');
+                item.className = 'contact-item';
+                item.innerHTML = `
+                    <div class="contact-avatar">${contact.avatar}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-status">
+                            ${contact.status === 'online' ? '● В сети' : '○ Не в сети'}
+                            · Подписчиков: ${contact.subscribers || 0}
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-primary" data-id="${contact.id}" data-action="chat">💬</button>
+                        <button class="btn btn-secondary" data-id="${contact.id}" data-action="subscribe">🔔</button>
+                        <button class="btn btn-secondary" data-id="${contact.id}" data-action="gift">🎁</button>
+                    </div>
+                `;
+                
+                item.querySelector('[data-action="chat"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const newChat = {
+                        id: Date.now(),
+                        name: contact.name,
+                        type: 'private',
+                        avatar: contact.avatar,
+                        lastMsg: 'Новый чат',
+                        time: 'только что',
+                        unread: 0
+                    };
+                    BeamChat.db.chats.push(newChat);
+                    BeamChat.db.messages[newChat.id] = [];
+                    showView('chats');
+                });
+                
+                item.querySelector('[data-action="subscribe"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    contact.subscribers = (contact.subscribers || 0) + 1;
+                    if (BeamChat.currentUser) {
+                        BeamChat.currentUser.subscribers = (BeamChat.currentUser.subscribers || 0) + 1;
+                    }
+                    renderContacts();
+                });
+                
+                item.querySelector('[data-action="gift"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openGiftModal(contact);
+                });
+                
+                container.appendChild(item);
+            });
+        }
+
+        // ==================== КАНАЛЫ ====================
+        function renderChannels() {
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>Каналы</h2>
+                    <button class="btn btn-primary" id="createChannelBtn">📢 Создать канал</button>
+                </div>
+                <div class="content-body">
+                    <div class="channels-list" id="channelsList"></div>
+                </div>
+            `;
+
+            const channelsList = document.getElementById('channelsList');
+            BeamChat.db.channels.forEach(channel => {
+                const item = document.createElement('div');
+                item.className = 'channel-item';
+                item.innerHTML = `
+                    <div class="channel-avatar">${channel.avatar}</div>
+                    <div class="channel-info">
+                        <div class="channel-name">${channel.name}</div>
+                        <div class="channel-subscribers">👥 ${channel.subscribers} подписчиков</div>
+                    </div>
+                    <button class="btn btn-${channel.isSubscribed ? 'secondary' : 'primary'}" data-id="${channel.id}">
+                        ${channel.isSubscribed ? '✅ Подписан' : '🔔 Подписаться'}
+                    </button>
+                    <button class="btn btn-secondary" data-id="${channel.id}" data-action="settings">⚙️</button>
+                `;
+                
+                item.querySelector('button:first-of-type').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    channel.isSubscribed = !channel.isSubscribed;
+                    if (channel.isSubscribed) {
+                        channel.subscribers++;
+                    } else {
+                        channel.subscribers--;
+                    }
+                    renderChannels();
+                });
+                
+                item.querySelector('[data-action="settings"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showChannelSettings(channel);
+                });
+                
+                item.addEventListener('click', () => {
+                    const channelChat = BeamChat.db.chats.find(c => c.id === channel.id);
+                    if (channelChat) {
+                        BeamChat.state.activeChat = channelChat.id;
+                        renderChats();
+                    }
+                });
+                
+                channelsList.appendChild(item);
+            });
+
+            document.getElementById('createChannelBtn').addEventListener('click', () => {
+                createChannelModal.classList.remove('hidden');
+            });
+        }
+
+        function showChannelSettings(channel) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-title">Настройки канала</div>
+                    <p style="color:white; margin-bottom:10px;">Название: ${channel.name}</p>
+                    <p style="color:white; margin-bottom:10px;">Подписчиков: ${channel.subscribers}</p>
+                    <input type="text" id="newChannelName" class="modal-input" placeholder="Новое название" value="${channel.name}">
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" id="renameChannelBtn">Переименовать</button>
+                        <button class="btn btn-danger" id="deleteChannelBtn">Удалить канал</button>
+                        <button class="btn btn-secondary" id="closeModal">Закрыть</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('renameChannelBtn').addEventListener('click', () => {
+                const newName = document.getElementById('newChannelName').value.trim();
+                if (newName) {
+                    channel.name = newName;
+                    const channelChat = BeamChat.db.chats.find(c => c.id === channel.id);
+                    if (channelChat) channelChat.name = newName;
+                    modal.remove();
+                    renderChannels();
+                }
+            });
+
+            document.getElementById('deleteChannelBtn').addEventListener('click', () => {
+                if (confirm('Удалить этот канал?')) {
+                    const index = BeamChat.db.channels.findIndex(c => c.id === channel.id);
+                    if (index !== -1) BeamChat.db.channels.splice(index, 1);
+                    
+                    const chatIndex = BeamChat.db.chats.findIndex(c => c.id === channel.id);
+                    if (chatIndex !== -1) BeamChat.db.chats.splice(chatIndex, 1);
+                    
+                    delete BeamChat.db.messages[channel.id];
+                    modal.remove();
+                    renderChannels();
+                }
+            });
+
+            document.getElementById('closeModal').addEventListener('click', () => modal.remove());
+        }
+
+        // ==================== ПОДАРКИ ====================
+        function renderGifts() {
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>🎁 Магазин подарков</h2>
+                    <div style="background:#1f294a; padding:10px 20px; border-radius:40px;">
+                        💰 ${BeamChat.currentUser?.coins || 0} монет
+                    </div>
+                </div>
+                <div class="content-body">
+                    <div class="gifts-grid">
+                        ${BeamChat.db.gifts.map(gift => `
+                            <div class="gift-card">
+                                <div class="gift-icon">${gift.icon}</div>
+                                <div style="font-weight:600;">${gift.name}</div>
+                                <div style="color:#ffd966; margin:10px 0;">${gift.price}💰</div>
+                                ${gift.vipOnly ? '<div style="color:gold;">👑 VIP</div>' : ''}
+                                <button class="btn btn-primary" data-gift='${JSON.stringify(gift)}' style="margin-top:10px;">Купить</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            document.querySelectorAll('[data-gift]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const gift = JSON.parse(e.target.dataset.gift);
+                    buyGift(gift);
+                });
+            });
+        }
+
+        function buyGift(gift) {
+            if (!BeamChat.currentUser) {
+                alert('Сначала войдите в систему');
+                authModal.classList.remove('hidden');
+                return;
+            }
+            
+            if (gift.vipOnly && !BeamChat.currentUser.isVip) {
+                alert('Этот подарок только для VIP');
+                return;
+            }
+            
+            if (BeamChat.currentUser.coins < gift.price) {
+                alert('Недостаточно монет');
+                return;
+            }
+            
+            BeamChat.currentUser.coins -= gift.price;
+            alert(`Подарок ${gift.name} куплен!`);
+            renderGifts();
+        }
+
+        function openGiftModal(contact) {
+            const grid = document.getElementById('giftsGrid');
+            grid.innerHTML = BeamChat.db.gifts.map(gift => `
+                <div class="gift-card">
+                    <div class="gift-icon">${gift.icon}</div>
+                    <div>${gift.name}</div>
+                    <div>${gift.price}💰</div>
+                    <button class="btn btn-primary" onclick="sendGift(${contact.id}, ${gift.id})">Отправить</button>
+                </div>
+            `).join('');
+            
+            giftModal.classList.remove('hidden');
+        }
+
+        window.sendGift = function(contactId, giftId) {
+            const contact = BeamChat.db.contacts.find(c => c.id === contactId);
+            const gift = BeamChat.db.gifts.find(g => g.id === giftId);
+            
+            if (!BeamChat.currentUser) {
+                alert('Сначала войдите в систему');
+                return;
+            }
+            
+            if (BeamChat.currentUser.coins >= gift.price) {
+                BeamChat.currentUser.coins -= gift.price;
+                alert(`Подарок ${gift.name} отправлен ${contact.name}!`);
+                giftModal.classList.add('hidden');
+            } else {
+                alert('Недостаточно монет');
+            }
+        };
+
+        // ==================== VIP ====================
+        function renderVIP() {
+            const isVip = BeamChat.currentUser?.isVip || false;
+            
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>👑 VIP Подписка</h2>
+                </div>
+                <div class="content-body">
+                    ${isVip ? `
+                        <div style="background: linear-gradient(145deg, #2a3f7a, #1c2b5a); border-radius: 32px; padding: 40px; text-align: center; margin-bottom: 30px; border: 2px solid gold;">
+                            <div style="font-size: 5rem;">👑</div>
+                            <h3 style="font-size: 2rem; margin:20px 0; color:white;">Вы VIP!</h3>
+                            <p style="color:#ffd966;">Спасибо за поддержку</p>
+                        </div>
+                    ` : `
+                        <div style="background: #1a2440; border-radius: 32px; padding: 40px; text-align: center; margin-bottom: 30px;">
+                            <div style="font-size: 5rem;">✨</div>
+                            <h3 style="margin:20px 0; color:white;">Станьте VIP</h3>
+                            <p style="color:#8a9fd1; margin-bottom:30px;">Получите эксклюзивные возможности</p>
+                            <button class="btn btn-primary" id="buyVipBtn" style="font-size:1.2rem; padding:15px 40px;">Купить VIP за 150💰</button>
+                        </div>
+                    `}
+                    
+                    <div style="background: #1a2440; border-radius: 24px; padding: 25px;">
+                        <h3 style="margin-bottom:20px; color:white;">Преимущества VIP</h3>
+                        <ul style="list-style: none; color:#b5d0ff;">
+                            <li style="margin:10px 0;">✓ Эксклюзивные подарки</li>
+                            <li style="margin:10px 0;">✓ Специальный значок в профиле</li>
+                            <li style="margin:10px 0;">✓ 100 монет ежемесячно</li>
+                            <li style="margin:10px 0;">✓ Ранний доступ к функциям</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+
+            const buyBtn = document.getElementById('buyVipBtn');
+            if (buyBtn) {
+                buyBtn.addEventListener('click', () => {
+                    if (!BeamChat.currentUser) {
+                        alert('Сначала войдите в систему');
+                        authModal.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    if (BeamChat.currentUser.coins >= 150) {
+                        BeamChat.currentUser.coins -= 150;
+                        BeamChat.currentUser.isVip = true;
+                        renderVIP();
+                        updateUI();
+                    } else {
+                        alert('Недостаточно монет');
+                    }
+                });
+            }
+        }
+
+        // ==================== НАСТРОЙКИ ====================
+        function renderSettings() {
+            if (!BeamChat.currentUser) {
+                mainContent.innerHTML = `
+                    <div class="content-header">
+                        <h2>Настройки</h2>
+                    </div>
+                    <div class="content-body">
+                        <div class="empty-state">
+                            <p style="margin-bottom:20px;">Войдите в систему, чтобы увидеть настройки</p>
+                            <button class="btn btn-primary" id="loginFromSettings">Войти</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('loginFromSettings').addEventListener('click', () => {
+                    authModal.classList.remove('hidden');
+                });
+                return;
+            }
+
+            mainContent.innerHTML = `
+                <div class="content-header">
+                    <h2>⚙️ Настройки</h2>
+                </div>
+                <div class="content-body">
+                    <div class="settings-section">
+                        <h3 style="margin-bottom:25px; color:white;">Личная информация</h3>
+                        
+                        <div class="settings-row">
+                            <span>Имя пользователя</span>
+                            <input type="text" id="settingsUsername" class="modal-input" style="width:300px;" value="${BeamChat.currentUser.username || ''}">
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>Электронная почта</span>
+                            <input type="email" id="settingsEmail" class="modal-input" style="width:300px;" value="${BeamChat.currentUser.email || ''}">
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>VIP статус</span>
+                            <span class="${BeamChat.currentUser.isVip ? 'stat-value' : ''}">${BeamChat.currentUser.isVip ? '✅ VIP' : '❌ Нет'}</span>
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>Монеты</span>
+                            <span class="stat-value">💰 ${BeamChat.currentUser.coins || 0}</span>
+                        </div>
+                        
+                        <div class="settings-row">
+                            <span>Подписчики</span>
+                            <span class="stat-value">👥 ${BeamChat.currentUser.subscribers || 0}</span>
+                        </div>
+                        
+                        <div style="margin-top:30px; display:flex; gap:15px;">
+                            <button class="btn btn-primary" id="saveSettingsBtn">Сохранить изменения</button>
+                            <button class="btn btn-secondary" id="logoutBtn">Выйти</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                BeamChat.currentUser.username = document.getElementById('settingsUsername').value;
+                BeamChat.currentUser.email = document.getElementById('settingsEmail').value;
+                alert('Настройки сохранены');
+                updateUI();
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                BeamChat.currentUser = null;
+                BeamChat.state.activeChat = null;
+                updateUI();
+                showView('chats');
+            });
+        }
+
+        // ==================== РЕАКЦИИ ====================
+        window.addReaction = function(chatId, msgId, reaction) {
+            const msg = BeamChat.db.messages[chatId]?.find(m => m.id === msgId);
+            if (msg) {
+                if (!msg.reactions) msg.reactions = [];
+                if (msg.reactions.includes(reaction)) {
+                    msg.reactions = msg.reactions.filter(r => r !== reaction);
+                } else {
+                    msg.reactions.push(reaction);
+                }
+                renderChatWindow(chatId);
+            }
+        };
+
+        window.showReactionPicker = function(chatId, msgId) {
+            const reactions = ['👍', '❤️', '🔥', '😂', '😮', '😢', '👎'];
+            const picker = document.createElement('div');
+            picker.style.cssText = `
+                position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+                background: #1a2440; padding:20px; border-radius:40px; border:2px solid #4f7ae0;
+                display:flex; gap:10px; z-index:2000;
+            `;
+            picker.innerHTML = reactions.map(r => 
+                `<span style="font-size:2rem; cursor:pointer;" onclick="addReaction(${chatId}, ${msgId}, '${r}'); this.parentElement.remove();">${r}</span>`
+            ).join('');
+            document.body.appendChild(picker);
+            
+            setTimeout(() => picker.remove(), 5000);
+        };
+
+        // ==================== АВТОРИЗАЦИЯ ====================
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm = document.getElementById('regConfirm').value;
+
+            if (!username || !email || !password || !confirm) {
+                alert('Заполните все поля');
+                return;
+            }
+
+            if (password !== confirm) {
+                alert('Пароли не совпадают');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Пароль должен быть минимум 6 символов');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                username: username,
+                email: email,
+                password: password,
+                isVip: false,
+                coins: 200,
+                subscribers: 0
+            };
+
+            BeamChat.db.users.push(newUser);
+            BeamChat.currentUser = newUser;
+            
+            authModal.classList.add('hidden');
+            updateUI();
+            showView('chats');
+        });
+
+        document.getElementById('switchToLoginBtn').addEventListener('click', () => {
+            const title = document.getElementById('authTitle');
+            if (title.textContent === 'Регистрация') {
+                title.textContent = 'Вход';
+                document.getElementById('registerBtn').textContent = 'Войти';
+                document.getElementById('switchToLoginBtn').textContent = 'Регистрация';
+            } else {
+                title.textContent = 'Регистрация';
+                document.getElementById('registerBtn').textContent = 'Зарегистрироваться';
+                document.getElementById('switchToLoginBtn').textContent = 'Войти';
+            }
+        });
+
+        document.getElementById('guestBtn').addEventListener('click', () => {
+            BeamChat.currentUser = {
+                id: 'guest_' + Date.now(),
+                username: 'Гость',
+                email: 'guest@beam.chat',
+                isVip: false,
+                coins: 100,
+                subscribers: 0
+            };
+            authModal.classList.add('hidden');
+            updateUI();
+            showView('chats');
+        });
+
+        // ==================== МОДАЛКИ ====================
+        document.getElementById('closeCreateChat').addEventListener('click', () => {
+            createChatModal.classList.add('hidden');
+        });
+
+        document.getElementById('createChatConfirm').addEventListener('click', () => {
+            const name = document.getElementById('chatName').value.trim();
+            const type = document.getElementById('chatType').value;
+            
+            if (!name) {
+                alert('Введите название чата');
+                return;
+            }
+
+            const newChat = {
+                id: Date.now(),
+                name: name,
+                type: type,
+                avatar: type === 'group' ? '👥' : name.charAt(0),
+                lastMsg: 'Чат создан',
+                time: 'только что',
+                unread: 0
+            };
+
+            BeamChat.db.chats.push(newChat);
+            BeamChat.db.messages[newChat.id] = [];
+            createChatModal.classList.add('hidden');
+            document.getElementById('chatName').value = '';
+            renderChats();
+        });
+
+        document.getElementById('closeCreateChannel').addEventListener('click', () => {
+            createChannelModal.classList.add('hidden');
+        });
+
+        document.getElementById('createChannelConfirm').addEventListener('click', () => {
+            const name = document.getElementById('channelName').value.trim();
+            const desc = document.getElementById('channelDesc').value.trim();
+            
+            if (!name) {
+                alert('Введите название канала');
+                return;
+            }
+
+            const newChannel = {
+                id: Date.now(),
+                name: name,
+                description: desc,
+                avatar: '📢',
+                subscribers: 1,
+                isSubscribed: true
+            };
+
+            BeamChat.db.channels.push(newChannel);
+            
+            BeamChat.db.chats.push({
+                id: newChannel.id,
+                name: name,
+                type: 'channel',
+                avatar: '📢',
+                lastMsg: 'Канал создан',
+                time: 'только что',
+                unread: 0
+            });
+            
+            BeamChat.db.messages[newChannel.id] = [];
+            createChannelModal.classList.add('hidden');
+            document.getElementById('channelName').value = '';
+            document.getElementById('channelDesc').value = '';
+            renderChannels();
+        });
+
+        document.getElementById('closeGiftModal').addEventListener('click', () => {
+            giftModal.classList.add('hidden');
+        });
+
+        // ==================== НАВИГАЦИЯ ====================
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => showView(item.dataset.view));
+        });
+
+        document.getElementById('profileBtn').addEventListener('click', () => {
+            if (!BeamChat.currentUser) {
+                authModal.classList.remove('hidden');
+            } else {
+                showView('settings');
+            }
+        });
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        // Показываем модалку регистрации при загрузке, если нет пользователя
+        setTimeout(() => {
+            if (!BeamChat.currentUser) {
+                authModal.classList.remove('hidden');
+            }
+        }, 500);
+
+        updateUI();
+        renderMainContent();
+    </script>
+</body>
+</html>
